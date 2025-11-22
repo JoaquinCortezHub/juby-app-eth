@@ -4,6 +4,9 @@ import { useState } from "react";
 import { ChevronLeft, Menu } from "lucide-react";
 import SuccessDialog from "./DepositSuccessDialog";
 import { useRouter } from "next/navigation";
+import { MiniKit } from "@worldcoin/minikit-js";
+import { CONTRACTS, toUSDC } from "@/lib/contracts/addresses";
+import { JUBY_VAULT_ABI, MOCK_USDC_ABI } from "@/lib/contracts/abis";
 
 // Utility function to format currency
 const formatCompact = (value: number): string => {
@@ -177,11 +180,59 @@ const EditableAmount = ({
 	);
 };
 
+// Goal Date Picker Component
+const GoalDatePicker = ({
+	goalMonths,
+	onChange,
+}: {
+	goalMonths: number;
+	onChange: (months: number) => void;
+}) => {
+	const options = [
+		{ months: 6, label: "6 meses" },
+		{ months: 12, label: "1 año" },
+		{ months: 24, label: "2 años" },
+		{ months: 36, label: "3 años" },
+	];
+
+	return (
+		<div className="w-full max-w-sm mb-6">
+			<p className="text-sm font-semibold text-gray-700 mb-3 text-center">
+				¿Cuándo quieres retirar tu dinero?
+			</p>
+			<div className="grid grid-cols-2 gap-3">
+				{options.map((option) => (
+					<button
+						key={option.months}
+						onClick={() => onChange(option.months)}
+						className={`py-3 px-4 rounded-xl font-semibold transition-all ${
+							goalMonths === option.months
+								? "bg-blue-500 text-white shadow-md"
+								: "bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-300"
+						}`}
+					>
+						{option.label}
+					</button>
+				))}
+			</div>
+			<p className="text-xs text-gray-500 mt-3 text-center">
+				Si retiras antes, Juby se queda con el 50% de tu ganancia
+			</p>
+		</div>
+	);
+};
+
 // Main Component
 export default function InvestmentScreen() {
 	const [investAmount, setInvestAmount] = useState(7400);
+	const [goalMonths, setGoalMonths] = useState(12);
 	const [onlyReceive, setOnlyReceive] = useState(false);
 	const [showSuccess, setShowSuccess] = useState(false);
+	const [isProcessing, setIsProcessing] = useState(false);
+	const [transactionStep, setTransactionStep] = useState<
+		"idle" | "approving" | "depositing" | "success" | "error"
+	>("idle");
+	const [errorMessage, setErrorMessage] = useState("");
 
 	const router = useRouter();
 
@@ -191,13 +242,72 @@ export default function InvestmentScreen() {
 		setInvestAmount(Math.min(Math.max(newAmount, 0), 15000));
 	};
 
-	const handleInvest = () => {
-		setShowSuccess(true);
+	const handleInvest = async () => {
+		if (isProcessing) return;
+
+		try {
+			setIsProcessing(true);
+			setErrorMessage("");
+
+			// Calculate goal date (Unix timestamp)
+			const goalDateTimestamp = Math.floor(Date.now() / 1000) + goalMonths * 30 * 24 * 60 * 60;
+
+			// Convert amount to USDC (6 decimals)
+			const amountInWei = toUSDC(investAmount);
+
+			// Step 1: Approve USDC spending
+			setTransactionStep("approving");
+
+			const approvalResult = await MiniKit.commandsAsync.sendTransaction({
+				transaction: [
+					{
+						address: CONTRACTS.MOCK_USDC,
+						abi: MOCK_USDC_ABI,
+						functionName: "approve",
+						args: [CONTRACTS.JUBY_VAULT, amountInWei.toString()],
+					},
+				],
+			});
+
+			if (approvalResult?.finalPayload?.status === "error") {
+				throw new Error("Approval failed");
+			}
+
+			// Step 2: Deposit to JubyVault
+			setTransactionStep("depositing");
+
+			const depositResult = await MiniKit.commandsAsync.sendTransaction({
+				transaction: [
+					{
+						address: CONTRACTS.JUBY_VAULT,
+						abi: JUBY_VAULT_ABI,
+						functionName: "deposit",
+						args: [amountInWei.toString(), goalDateTimestamp.toString()],
+					},
+				],
+			});
+
+			if (depositResult?.finalPayload?.status === "error") {
+				throw new Error("Deposit failed");
+			}
+
+			// Success!
+			setTransactionStep("success");
+			setShowSuccess(true);
+		} catch (error) {
+			console.error("Investment error:", error);
+			setTransactionStep("error");
+			setErrorMessage(
+				error instanceof Error ? error.message : "Transaction failed. Please try again."
+			);
+		} finally {
+			setIsProcessing(false);
+		}
 	};
 
 	const handleBackHome = () => {
-		router.push('/dashboard');
-	}
+		router.push("/dashboard");
+	};
 
 	return (
 		<div className="min-h-screen bg-linear-to-b from-sky-50 to-blue-50 flex flex-col">
@@ -248,8 +358,11 @@ export default function InvestmentScreen() {
 					/>
 				</div>
 
+				{/* Goal Date Picker */}
+				<GoalDatePicker goalMonths={goalMonths} onChange={setGoalMonths} />
+
 				{/* Savings Card */}
-				<div className="bg-white rounded-full py-3 px-5 shadow-md flex items-center gap-3 mb-8">
+				<div className="bg-white rounded-full py-3 px-5 shadow-md flex items-center gap-3 mb-4">
 					<img
 						src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
 						alt="Avatar"
@@ -262,16 +375,42 @@ export default function InvestmentScreen() {
 						</p>
 					</div>
 				</div>
+
+				{/* Error Message */}
+				{errorMessage && (
+					<div className="w-full max-w-sm bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+						<p className="text-sm text-red-700 text-center">{errorMessage}</p>
+					</div>
+				)}
+
+				{/* Transaction Status */}
+				{isProcessing && (
+					<div className="w-full max-w-sm bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+						<p className="text-sm text-blue-700 text-center">
+							{transactionStep === "approving" && "Aprobando USDC..."}
+							{transactionStep === "depositing" && "Depositando en tu cuenta..."}
+						</p>
+					</div>
+				)}
 			</main>
 
 			{/* Footer Actions */}
 			<footer className="px-6 pb-8">
 				{/* CTA Button */}
-				<button 
-					className="w-full py-4 bg-linear-to-r from-sky-400 to-blue-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-shadow mb-4"
+				<button
+					className={`w-full py-4 text-white font-semibold rounded-full shadow-lg transition-all mb-4 ${
+						isProcessing
+							? "bg-gray-400 cursor-not-allowed"
+							: "bg-linear-to-r from-sky-400 to-blue-500 hover:shadow-xl"
+					}`}
 					onClick={handleInvest}
+					disabled={isProcessing}
 				>
-					Recibir e Inviertir
+					{isProcessing
+						? transactionStep === "approving"
+							? "Aprobando..."
+							: "Depositando..."
+						: "Recibir e Invertir"}
 				</button>
 
 				{/* Checkbox */}
