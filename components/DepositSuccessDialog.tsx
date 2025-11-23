@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle, X, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface SuccessDialogProps {
@@ -38,22 +37,18 @@ export default function SuccessDialog({
 
 			{/* Dialog */}
 			<div className="relative bg-white rounded-3xl p-8 mx-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-300">
-				{/* Close button
-				<button
-					onClick={onClose}
-					className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-				>
-					<X className="w-5 h-5 text-gray-400" />
-				</button> */}
-
-				{/* Success icon */}
+				{/* Animated Success Check */}
 				<div className="flex justify-center mb-6">
-					<div className="relative">
-						<div className="w-20 h-20 bg-linear-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
-							<CheckCircle className="w-10 h-10 text-white" strokeWidth={2.5} />
-						</div>
-						{/* Decorative rings */}
-						<div className="absolute inset-0 w-20 h-20 rounded-full border-4 border-green-200 animate-ping opacity-30" />
+					<div className="w-32 h-32">
+						<video
+							autoPlay
+							loop
+							muted
+							playsInline
+							className="h-full w-full object-contain"
+						>
+							<source src="/assets/check-deposito.mp4" type="video/mp4" />
+						</video>
 					</div>
 				</div>
 

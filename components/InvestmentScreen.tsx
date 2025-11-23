@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, Menu } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import SuccessDialog from "./DepositSuccessDialog";
 import { useRouter } from "next/navigation";
 import { MiniKit } from "@worldcoin/minikit-js";
@@ -313,19 +313,28 @@ export default function InvestmentScreen() {
 		<div className="min-h-screen bg-linear-to-b from-sky-50 to-blue-50 flex flex-col">
 			{/* Header */}
 			<header className="flex justify-between items-center p-4">
-				<button className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow">
+				<button
+					onClick={() => router.push("/dashboard")}
+					className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+				>
 					<ChevronLeft className="w-5 h-5 text-blue-500" />
-				</button>
-				<button className="w-10 h-10 flex items-center justify-center">
-					<Menu className="w-6 h-6 text-gray-700" />
 				</button>
 			</header>
 
 			{/* Main Content */}
 			<main className="flex-1 flex flex-col items-center px-6 pt-8">
-				{/* Coin Icon */}
-				<div className="w-16 h-16 bg-linear-to-br from-yellow-300 to-yellow-500 rounded-full shadow-lg mb-6 flex items-center justify-center">
-					<div className="w-12 h-12 bg-linear-to-br from-yellow-400 to-yellow-500 rounded-full border-4 border-yellow-300" />
+				{/* Animated Coin */}
+				<div className="w-40 h-40 mb-6">
+					<video
+						autoPlay
+						loop
+						muted
+						playsInline
+						className="h-full w-full object-contain mix-blend-multiply"
+						style={{ filter: 'contrast(1.1) brightness(1.1)' }}
+					>
+						<source src="/assets/coin-dposit.mp4" type="video/mp4" />
+					</video>
 				</div>
 
 				{/* Title */}
