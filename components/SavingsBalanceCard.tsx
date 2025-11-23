@@ -46,7 +46,10 @@ export default function SavingsBalanceCard() {
       <div className="absolute bottom-[20px] right-[30px] flex items-center gap-[22px]">
         {/* Send button */}
         <div className="flex flex-col items-center gap-1">
-          <button className="flex h-[40.515px] w-[40.515px] items-center justify-center rounded-full bg-[#f5f5f5] transition-colors hover:bg-[#e0e0e0] cursor-pointer">
+          <button 
+            className="flex h-[40.515px] w-[40.515px] items-center justify-center rounded-full bg-[#f5f5f5] transition-colors hover:bg-[#e0e0e0] cursor-pointer"
+            onClick={() => router.push('/withdraw')}
+          >
             <Image
               src="/assets/icons/send-icon.svg"
               alt="Send"
@@ -56,7 +59,7 @@ export default function SavingsBalanceCard() {
             />
           </button>
           <span className="font-manrope text-[12px] font-medium tracking-[-0.36px] text-[#31353b] opacity-60">
-            Send
+            Withdraw
           </span>
         </div>
 

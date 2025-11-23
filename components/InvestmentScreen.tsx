@@ -249,6 +249,29 @@ export default function InvestmentScreen() {
 			setIsProcessing(true);
 			setErrorMessage("");
 
+			// Check if we're in mock mode
+			const isMockMode = process.env.NEXT_PUBLIC_MOCK_MODE === 'true';
+
+			if (isMockMode) {
+				// Mock flow for demo video
+				console.log("Running in MOCK MODE - simulating transactions");
+
+				// Step 1: Mock approve
+				setTransactionStep("approving");
+				await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+
+				// Step 2: Mock deposit
+				setTransactionStep("depositing");
+				await new Promise(resolve => setTimeout(resolve, 2500)); // 2.5 second delay
+
+				// Success!
+				setTransactionStep("success");
+				setShowSuccess(true);
+				console.log("Mock deposit successful!");
+				return;
+			}
+
+			// Real blockchain flow below (unchanged)
 			// Calculate goal date (Unix timestamp)
 			const goalDateTimestamp = Math.floor(Date.now() / 1000) + goalMonths * 30 * 24 * 60 * 60;
 

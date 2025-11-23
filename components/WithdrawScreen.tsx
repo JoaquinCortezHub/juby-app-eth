@@ -65,6 +65,27 @@ export default function WithdrawScreen() {
 			setTransactionStatus("processing");
 			setErrorMessage("");
 
+			// Check if we're in mock mode
+			const isMockMode = process.env.NEXT_PUBLIC_MOCK_MODE === 'true';
+
+			if (isMockMode) {
+				// Mock flow for demo video
+				console.log("Running in MOCK MODE - simulating withdrawal");
+
+				// Simulate withdrawal processing
+				await new Promise(resolve => setTimeout(resolve, 2500)); // 2.5 second delay
+
+				setTransactionStatus("success");
+				console.log("Mock withdrawal successful!");
+
+				// Navigate back to dashboard after successful withdrawal
+				setTimeout(() => {
+					router.push("/dashboard");
+				}, 2000);
+				return;
+			}
+
+			// Real blockchain flow below (unchanged)
 			const withdrawResult = await MiniKit.commandsAsync.sendTransaction({
 				transaction: [
 					{
@@ -212,7 +233,7 @@ export default function WithdrawScreen() {
 				{depositInfo.isEarly && depositInfo.potentialPenalty > 0 && (
 					<div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 mb-6">
 						<div className="flex items-start gap-3">
-							<AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+							<AlertCircle className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
 							<div className="flex-1">
 								<h3 className="font-bold text-amber-900 mb-2">
 									Retiro anticipado
@@ -252,7 +273,7 @@ export default function WithdrawScreen() {
 				{!depositInfo.isEarly && (
 					<div className="bg-green-50 border-2 border-green-200 rounded-2xl p-5 mb-6">
 						<div className="flex items-start gap-3">
-							<div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+							<div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shrink-0">
 								<svg
 									className="w-4 h-4 text-white"
 									fill="none"

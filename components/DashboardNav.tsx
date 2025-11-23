@@ -6,10 +6,10 @@ export default function DashboardNav() {
       {/* Juby Logo */}
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#424de7]">
         <Image
-          src="/assets/juby-logo.svg"
+          src="/logo/logo/square blue.png"
           alt="Juby"
-          width={24}
-          height={24}
+          width={44}
+          height={44}
           className="object-contain"
         />
       </div>
